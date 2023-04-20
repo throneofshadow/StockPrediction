@@ -6,15 +6,17 @@ from fbprophet import Prophet
 from fbprophet.plot import plot_plotly
 from plotly import graph_objs as go
 
-START = "2015-01-01"
+START = "2015-01-01"  # Limit of historical data from yfinance
 TODAY = date.today().strftime("%Y-%m-%d")
 
-st.title('Stock Forecast App')
+st.title('SPY Stock and Options Forecasting App')
 
+
+# Code here to select stocks, for now is just some fang stocks, add choice in future (limit by yfinance)
 stocks = ('GOOG', 'AAPL', 'MSFT', 'GME')
 selected_stock = st.selectbox('Select dataset for prediction', stocks)
 
-n_years = st.slider('Years of prediction:', 1, 4)
+n_years = st.slider('Desired length of forecast in years:', 1, 4)  # Users choose what time period to predict over
 period = n_years * 365
 
 
@@ -25,14 +27,12 @@ def load_data(ticker):
     return data
 
 
-data_load_state = st.text('Loading data...')
+data_load_state = st.text('Consulting database..')
 data = load_data(selected_stock)
-data_load_state.text('Loading data... done!')
-
-st.subheader('Raw data')
+st.subheader('Historical Price at Open and Close (2015-current) of ' + str(selected_stock))
 st.write(data.tail())
 
-# Plot raw data
+# Plot raw data, update visualization to be more compelling
 def plot_raw_data():
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=data['Date'], y=data['Open'], name="stock_open"))
@@ -42,8 +42,13 @@ def plot_raw_data():
 
 plot_raw_data()
 
+
+# Feature selection
+
+
+# Model selection, training
 # Predict forecast with Prophet.
-df_train = data[['Date','Close']]
+df_train = data[['Date', 'Close']]
 df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
 
 m = Prophet()
