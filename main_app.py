@@ -1,11 +1,10 @@
 import pdb
-
 import streamlit as st
 from datetime import date
 import numpy as np
 import yfinance as yf
 from prophet import Prophet
-from prophet.plot import plot_plotly
+from prophet.plot import plot_plotly, plot_components_plotly, add_changepoints_to_plot
 from plotly import graph_objs as go
 from pytickersymbols import PyTickerSymbols as PTS
 
@@ -36,7 +35,7 @@ st.subheader('Historical Price Action at Open and Close (2015-current) of ' + st
 
 
 def plot_daily_trading_volume():
-    fig = go.Figure(data=[go.Candlestick(x=data.index,
+    fig = go.Figure(data=[go.Candlestick(x=data['Date'],
                                          open=data['Open'],
                                          high=data['High'],
                                          low=data['Low'],
@@ -65,23 +64,28 @@ plot_raw_data()
 # Predict forecast with Prophet.
 df_train = data[['Date', 'Close']]
 df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
+log_df_train = df_train
+log_df_train['cap'] = 3 * df_train['y']   # avoid large swings in prediction
+log_df_train['floor'] = np.zeros(df_train.shape[0]) + 0.5  # Set saturating minimum
 # Log-Scale our data (to prevent negative forecasting),
 # this performs a box-cox transformation or conventionally sets lambda = 0
-m = Prophet(growth='logistic')
+m = Prophet()
+m_log = Prophet(growth='logistic')
+m_log.fit(log_df_train)
 m.fit(df_train)
 future = m.make_future_dataframe(periods=period)
-future['cap'] = df_train['y'][-1] + period * (0.05 * df_train['y'][-1])
-# Set highest value achievable to 5% daily climb
-future['floor'] = 0.5  # Set saturating minimum
-forecast = m.predict(future)
-# Show and plot forecast
-st.subheader('Forecast data')
-st.write(forecast.tail())
+log_future = m_log.make_future_dataframe(periods=period)
+# Set highest value achievable to 30% daily climb
+log_future['cap'] = np.zeros(future.shape[0]) + df_train['y'].max() * 2
+# avoid large swings in prediction
+log_future['floor'] = np.zeros(future.shape[0]) + 0.5  # Set saturating minimum
 
-st.write(f'Forecast plot for {n_years} years')
+forecast = m.predict(future)
+log_forecast = m_log.predict(log_future)
+# Visualizations of prophet forecasts
+st.write(f'Forecast plot for {n_years} years using prophet')
 fig1 = plot_plotly(m, forecast)
 st.plotly_chart(fig1)
-
 st.write("Forecast components")
-fig2 = m.plot_components(forecast)
+fig2 = plot_components_plotly(m, forecast)
 st.write(fig2)
