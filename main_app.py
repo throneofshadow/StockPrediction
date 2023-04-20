@@ -32,7 +32,7 @@ def load_data(ticker):
 
 data_load_state = st.text('Consulting database..')
 data = load_data(selected_stock)
-st.subheader('Historical Price at Open and Close (2015-current) of ' + str(selected_stock))
+st.subheader('Historical Price at Open and Close (2015-current)of ' + str(selected_stock))
 st.write(data.tail())  # replace with vol plot, other useful plots
 
 
