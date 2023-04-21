@@ -69,8 +69,8 @@ log_df_train['cap'] = 3 * df_train['y']   # avoid large swings in prediction
 log_df_train['floor'] = np.zeros(df_train.shape[0]) + 0.5  # Set saturating minimum
 # Log-Scale our data (to prevent negative forecasting),
 # this performs a box-cox transformation or conventionally sets lambda = 0
-m = Prophet()
-m_log = Prophet(growth='logistic')
+m = Prophet(mcmc_samples=300)
+m_log = Prophet(growth='logistic', mcmc_samples=300)
 m_log.fit(log_df_train)
 m.fit(df_train)
 future = m.make_future_dataframe(periods=period)
