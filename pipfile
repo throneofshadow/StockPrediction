@@ -11,6 +11,7 @@ pandas = "*"
 fbprophet = "*"
 chart-studio = "*"
 numpy = "*"
+pytickersymbols = "*"
 
 [requires]
 python_version = "3.7"
